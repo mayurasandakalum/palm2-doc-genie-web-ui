@@ -14,8 +14,7 @@ class MyEmbeddingFunction(EmbeddingFunction[Documents]):
         return embeddings
 
 
-class ABC:
-    pass
+custom = MyEmbeddingFunction()
 
 
 def configure_palm(api_key):
@@ -31,14 +30,14 @@ def get_text_model():
     return models[0]
 
 
-def embed_function(texts: Documents, text_model) -> ABC:
+def embed_function(texts: Documents, text_model) -> MyEmbeddingFunction:
     return [palm.generate_embeddings(model=text_model, text=text)['embedding'] for text in texts]
 
 
 def create_chroma_db(documents, name, text_model):
     chroma_client = chromadb.Client()
     db = chroma_client.create_collection(
-        name=name, embedding_function=lambda input: embed_function(input, text_model))
+        name=name, embedding_function=custom)
     for i, d in enumerate(documents):
         db.add(documents=d, ids=str(i))
     return db
