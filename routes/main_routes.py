@@ -1,3 +1,6 @@
+from modules import text_generator
+from modules import embedding_generator
+from modules import document_loader
 from flask import request, render_template, jsonify
 import textwrap
 import os
@@ -6,11 +9,9 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 import google.generativeai as palm
 from modules.forms import ChatForm
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import TfidfVectorizer
 
-from modules import document_loader
-from modules import embedding_generator
-from modules import text_generator
-import os
 
 print("Setting environment variable: ", os.path.join(
     os.getcwd(), "gen-lang-client-0582614236-c66336e67562.json"))
@@ -42,16 +43,40 @@ text_model2 = text_generator.get_text_generation_model()
 # The existing find_best_passage, make_prompt, and other functions remain the same
 
 
+def ensure_same_dimensions(X, Y):
+    # Determine the smaller number of features
+    n_components = min(X.shape[1], Y.shape[1])
+
+    svd = TruncatedSVD(n_components=n_components)
+
+    # Fit the SVD transformer with the larger dimension data
+    if X.shape[1] > Y.shape[1]:
+        svd.fit(X)
+    else:
+        svd.fit(Y)
+
+    X_transformed = svd.transform(X)
+    Y_transformed = svd.transform(Y)
+
+    return X_transformed, Y_transformed
+
+
 def find_best_passage(query, dataframe):
     # Generate embeddings for the query!
-    query_embedding = palm.generate_embeddings(model=text_model, text=query)
+    vectorizer = TfidfVectorizer()
+    query_embedding = vectorizer.fit_transform([query])
 
     # Stack the embeddings into a matrix.
-    embeddings_matrix = np.stack(dataframe['Embeddings'].to_numpy())
+    embeddings_matrix = vectorizer.transform(dataframe['Text'].to_numpy())
+
+    # Ensure the query_embedding and embeddings_matrix have the same dimensions
+    query_embedding_transformed, embeddings_matrix_transformed = ensure_same_dimensions(
+        query_embedding, embeddings_matrix)
 
     # Calculate the cosine similarity between the query and each passage in the document.
     cosine_similarities = cosine_similarity(
-        embeddings_matrix, np.array(query_embedding['embedding']).reshape(1, -1))
+        embeddings_matrix_transformed, query_embedding_transformed)
+
     # Find the index of the passage with the highest cosine similarity to the query.
     idx = np.argmax(cosine_similarities)
 
@@ -124,6 +149,10 @@ def register_routes(app):
     @app.route('/generate-section', methods=['POST'])
     def generate_section():
         topic = request.form['topic']
+        print("topic: ", topic)
+        # print("['Embeddings']: ", df['Embeddings'][0])
+        print("\n\ndataframe: ", df)
+
         passage, cosine_similarity = find_best_passage(topic, df)
         prompt = make_prompt(topic, passage)
 
