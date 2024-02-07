@@ -26,6 +26,8 @@ RESPONSE_FILENAME = 'conversation.txt'
 # Load documents
 documents = document_loader.load_documents()
 
+print(f"Loaded {len(documents)} documents.")
+
 # Configure palm and get text model
 API_KEY = os.getenv('API_KEY')
 embedding_generator.configure_palm(API_KEY)

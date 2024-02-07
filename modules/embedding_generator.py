@@ -52,7 +52,8 @@ def generate_embeddings_df(documents, text_model):
 
     # Create a DataFrame from the embeddings data
     df = pd.DataFrame(embeddings_data)
-    df.columns = ['Text', 'Embeddings', 'Document_ID', 'Embedding_ID']
+    df.columns = ['Text', 'Embeddings', 'Document_ID',
+                  'Embedding_ID', 'Column5', 'Column6']
     df['Embeddings'] = df['Embeddings'].apply(np.array)
 
     return df
