@@ -6,7 +6,7 @@ from chromadb.api.types import Documents, Embeddings, EmbeddingFunction
 from chromadb.utils import embedding_functions
 
 
-class MyEmbeddingFunction(EmbeddingFunction[Documents]):
+class MyEmbeddingFunction(EmbeddingFunction):
     def __call__(self, input: Documents) -> Embeddings:
         sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
             model_name="BAAI/bge-large-en-v1.5")
@@ -53,7 +53,7 @@ def generate_embeddings_df(documents, text_model):
     # Create a DataFrame from the embeddings data
     df = pd.DataFrame(embeddings_data)
     df.columns = ['Text', 'Embeddings', 'Document_ID',
-                  'Embedding_ID', 'Column5', 'Column6']
+                  'Embedding_ID']
     df['Embeddings'] = df['Embeddings'].apply(np.array)
 
     return df
