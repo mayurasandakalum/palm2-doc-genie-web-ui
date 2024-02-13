@@ -7,3 +7,4 @@ flask_wtf
 wtforms
 pypdf
 chromadb==0.3.29
+gunicorn
