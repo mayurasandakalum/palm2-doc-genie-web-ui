@@ -6,4 +6,4 @@ scikit-learn
 flask_wtf
 wtforms
 pypdf
-chromadb
+chromadb==0.3.29
