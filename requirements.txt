@@ -8,3 +8,4 @@ wtforms
 pypdf
 chromadb==0.3.29
 gunicorn
+sentence_transformers
